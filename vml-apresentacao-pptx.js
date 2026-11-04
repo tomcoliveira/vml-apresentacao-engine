@@ -80,16 +80,24 @@
     return campos;
   }
 
+  // O Open renderiza o prompt como markdown e pode comer o "_" dos nomes; c1_nome e c1nome valem o mesmo.
+  function chave(nome) { return String(nome).toLowerCase().replace(/[^a-z0-9]/g, ""); }
+  function valorDe(valores, nome) {
+    var k = chave(nome);
+    for (var n in valores) if (chave(n) === k) return String(valores[n] || "").trim();
+    return "";
+  }
+
   function validar(campos, valores) {
-    var erros = [], avisos = [];
+    var erros = [], avisos = [], conhecidas = Object.keys(campos).map(chave);
     Object.keys(campos).forEach(function (nome) {
-      var r = campos[nome], v = String(valores[nome] || "").trim();
+      var r = campos[nome], v = valorDe(valores, nome);
       if (!v) avisos.push(nome + ": vazio");
       else if (r.tipo === "texto" && v.length > r.max_caracteres) erros.push(nome + ": " + v.length + " caracteres, m\u00e1ximo " + r.max_caracteres);
       else if (r.tipo === "opcao" && r.opcoes.indexOf(v) < 0) erros.push(nome + ": '" + v + "' fora de " + r.opcoes.join("/"));
     });
     Object.keys(valores).forEach(function (nome) {
-      if (!campos[nome]) avisos.push(nome + ": n\u00e3o existe no template, ignorado");
+      if (conhecidas.indexOf(chave(nome)) < 0) erros.push(nome + ": n\u00e3o existe no template");
     });
     return { erros: erros, avisos: avisos };
   }
@@ -101,7 +109,7 @@
         var texto = textoDo(ps[i]);
         if (!texto.match(TAG)) continue;
         var ts = ps[i].getElementsByTagNameNS(A, "t");
-        ts[0].textContent = texto.replace(TAG, function (_, nome) { return String(valores[nome] || "").trim(); });
+        ts[0].textContent = texto.replace(TAG, function (_, nome) { return valorDe(valores, nome); });
         for (var j = 1; j < ts.length; j++) ts[j].textContent = "";
       }
     });
@@ -133,7 +141,7 @@
   }
 
   function nomeArquivo(D) {
-    return (String(D.nome_arquivo || "apresentacao").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w-]+/g, "-").slice(0, 60) || "apresentacao") + ".pptx";
+    return (String(D.nome_arquivo || D.nomearquivo || "apresentacao").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w-]+/g, "-").slice(0, 60) || "apresentacao") + ".pptx";
   }
 
   function gerar(fonte, D) {
@@ -206,5 +214,5 @@
     if (document.body) comZip(); else document.addEventListener("DOMContentLoaded", comZip);
   }
 
-  root.VMLApresentacao = { version: "1.2", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar, artefato: artefato };
+  root.VMLApresentacao = { version: "1.3", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar, artefato: artefato };
 })(this);
