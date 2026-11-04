@@ -1,26 +1,26 @@
 /*
- * vml-apresentacao-pptx.js — v1.1
+ * vml-apresentacao-pptx.js \u2014 v1.2
  * Preenche um template .pptx marcado com tags e baixa o arquivo, dentro de um artefato HTML do WPP Open.
- * Não conhece layout: lê as tags do próprio template.
+ * N\u00e3o conhece layout: l\u00ea as tags do pr\u00f3prio template.
  *
- * Dependência, carregada antes deste arquivo:
+ * Depend\u00eancia, carregada antes deste arquivo:
  *   https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js
  *
- * Tags no template (texto digitado de uma vez, sem trocar formatação no meio):
- *   {{nome|45}}               texto com até 45 caracteres
- *   {{nome|Baixo/Médio/Alto}} uma das opções
- * O texto do parágrafo herda a formatação do primeiro trecho. Texto sem tag não muda.
+ * Tags no template (texto digitado de uma vez, sem trocar formata\u00e7\u00e3o no meio):
+ *   {{nome|45}}               texto com at\u00e9 45 caracteres
+ *   {{nome|Baixo/M\u00e9dio/Alto}} uma das op\u00e7\u00f5es
+ * O texto do par\u00e1grafo herda a formata\u00e7\u00e3o do primeiro trecho. Texto sem tag n\u00e3o muda.
  *
  * Contrato de dados (D):
  * { template: "ford-01", nome_arquivo: "proposta-ford", valores: { titulo: "...", c1_nome: "..." } }
  * template pode ser um id registrado em TEMPLATES (arquivo em templates/, ao lado deste script) ou uma URL.
- * Sem template acessível, o artefato pede o .pptx ao usuário.
+ * Sem template acess\u00edvel, o artefato pede o .pptx ao usu\u00e1rio.
  *
  * Navegador: VMLApresentacao.montar(D, { preview, botao, entrada, avisos })
  */
 (function (root) {
   var TEMPLATES = {
-    "ford-01": { arquivo: "templates/ford-01.b64.txt", nome: "Ford, comparação de três opções" }
+    "ford-01": { arquivo: "templates/ford-01.b64.txt", nome: "Ford, compara\u00e7\u00e3o de tr\u00eas op\u00e7\u00f5es" }
   };
   // O jsDelivr bloqueia .pptx; o template publicado vai em base64 (.b64.txt), gerado a partir do .pptx de mesmo nome.
   var A = "http://schemas.openxmlformats.org/drawingml/2006/main";
@@ -50,7 +50,7 @@
     var url = TEMPLATES[fonte] ? base + TEMPLATES[fonte].arquivo : fonte;
     var b64 = /\.b64\.txt$/.test(url);
     return fetch(url).then(function (r) {
-      if (!r.ok) throw new Error("template não encontrado: " + fonte);
+      if (!r.ok) throw new Error("template n\u00e3o encontrado: " + fonte);
       return b64 ? r.text() : r.arrayBuffer();
     }).then(function (dados) {
       return b64 ? JSZip.loadAsync(dados.replace(/\s+/g, ""), { base64: true }) : JSZip.loadAsync(dados);
@@ -85,11 +85,11 @@
     Object.keys(campos).forEach(function (nome) {
       var r = campos[nome], v = String(valores[nome] || "").trim();
       if (!v) avisos.push(nome + ": vazio");
-      else if (r.tipo === "texto" && v.length > r.max_caracteres) erros.push(nome + ": " + v.length + " caracteres, máximo " + r.max_caracteres);
+      else if (r.tipo === "texto" && v.length > r.max_caracteres) erros.push(nome + ": " + v.length + " caracteres, m\u00e1ximo " + r.max_caracteres);
       else if (r.tipo === "opcao" && r.opcoes.indexOf(v) < 0) erros.push(nome + ": '" + v + "' fora de " + r.opcoes.join("/"));
     });
     Object.keys(valores).forEach(function (nome) {
-      if (!campos[nome]) avisos.push(nome + ": não existe no template, ignorado");
+      if (!campos[nome]) avisos.push(nome + ": n\u00e3o existe no template, ignorado");
     });
     return { erros: erros, avisos: avisos };
   }
@@ -107,7 +107,7 @@
     });
   }
 
-  // Prévia aproximada: cada caixa de texto na posição e no corpo do template, sem imagens nem fontes da marca.
+  // Pr\u00e9via aproximada: cada caixa de texto na posi\u00e7\u00e3o e no corpo do template, sem imagens nem fontes da marca.
   function preview(docs, el, larguraSlide) {
     el.innerHTML = "";
     docs.forEach(function (d) {
@@ -133,7 +133,7 @@
   }
 
   function nomeArquivo(D) {
-    return (String(D.nome_arquivo || "apresentacao").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^\w-]+/g, "-").slice(0, 60) || "apresentacao") + ".pptx";
+    return (String(D.nome_arquivo || "apresentacao").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w-]+/g, "-").slice(0, 60) || "apresentacao") + ".pptx";
   }
 
   function gerar(fonte, D) {
@@ -174,9 +174,37 @@
       }
     }
     if (ui.botao) ui.botao.disabled = true;
-    if (!D.template) return pedirArquivo("Template não informado.");
-    return gerar(D.template, D).then(mostrar, function () { pedirArquivo("Não foi possível carregar o template " + D.template + "."); });
+    if (!D.template) return pedirArquivo("Template n\u00e3o informado.");
+    return gerar(D.template, D).then(mostrar, function () { pedirArquivo("N\u00e3o foi poss\u00edvel carregar o template " + D.template + "."); });
   }
 
-  root.VMLApresentacao = { version: "1.1", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar };
+  // Artefato m\u00ednimo: monta a interface e carrega o JSZip sozinho, para o agente s\u00f3 escrever D.
+  function artefato(D) {
+    function iniciar() {
+      var corpo = document.body;
+      corpo.style.cssText += ";font-family:Arial,sans-serif;margin:16px";
+      var avisos = document.createElement("div");
+      avisos.style.cssText = "white-space:pre-wrap;font-size:13px;color:#a00;margin-bottom:8px";
+      var entrada = document.createElement("input");
+      entrada.type = "file"; entrada.accept = ".pptx"; entrada.style.display = "none";
+      var botao = document.createElement("button");
+      botao.textContent = "Baixar PowerPoint";
+      botao.style.cssText = "font-size:14px;padding:8px 16px;margin-bottom:12px";
+      var vb = document.createElement("div");
+      vb.style.cssText = "width:100%;max-width:960px";
+      [avisos, entrada, botao, vb].forEach(function (e) { corpo.appendChild(e); });
+      montar(D, { preview: vb, botao: botao, entrada: entrada, avisos: avisos });
+    }
+    function comZip() {
+      if (root.JSZip) return iniciar();
+      var s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
+      s.onload = iniciar;
+      s.onerror = function () { document.body.textContent = "N\u00e3o foi poss\u00edvel carregar o JSZip do jsDelivr."; };
+      document.head.appendChild(s);
+    }
+    if (document.body) comZip(); else document.addEventListener("DOMContentLoaded", comZip);
+  }
+
+  root.VMLApresentacao = { version: "1.2", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar, artefato: artefato };
 })(this);
