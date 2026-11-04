@@ -1,5 +1,5 @@
 /*
- * vml-apresentacao-pptx.js — v1.0
+ * vml-apresentacao-pptx.js — v1.1
  * Preenche um template .pptx marcado com tags e baixa o arquivo, dentro de um artefato HTML do WPP Open.
  * Não conhece layout: lê as tags do próprio template.
  *
@@ -20,8 +20,9 @@
  */
 (function (root) {
   var TEMPLATES = {
-    "ford-01": { arquivo: "templates/ford-01.pptx", nome: "Ford, comparação de três opções" }
+    "ford-01": { arquivo: "templates/ford-01.b64.txt", nome: "Ford, comparação de três opções" }
   };
+  // O jsDelivr bloqueia .pptx; o template publicado vai em base64 (.b64.txt), gerado a partir do .pptx de mesmo nome.
   var A = "http://schemas.openxmlformats.org/drawingml/2006/main";
   var P = "http://schemas.openxmlformats.org/presentationml/2006/main";
   var TAG = /\{\{(\w+)\|([^}]+)\}\}/g;
@@ -47,10 +48,13 @@
   function carregar(fonte) {
     if (fonte instanceof Blob) return fonte.arrayBuffer().then(JSZip.loadAsync);
     var url = TEMPLATES[fonte] ? base + TEMPLATES[fonte].arquivo : fonte;
+    var b64 = /\.b64\.txt$/.test(url);
     return fetch(url).then(function (r) {
       if (!r.ok) throw new Error("template não encontrado: " + fonte);
-      return r.arrayBuffer();
-    }).then(JSZip.loadAsync);
+      return b64 ? r.text() : r.arrayBuffer();
+    }).then(function (dados) {
+      return b64 ? JSZip.loadAsync(dados.replace(/\s+/g, ""), { base64: true }) : JSZip.loadAsync(dados);
+    });
   }
 
   function lerDocs(zip) {
@@ -174,5 +178,5 @@
     return gerar(D.template, D).then(mostrar, function () { pedirArquivo("Não foi possível carregar o template " + D.template + "."); });
   }
 
-  root.VMLApresentacao = { version: "1.0", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar };
+  root.VMLApresentacao = { version: "1.1", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar };
 })(this);
