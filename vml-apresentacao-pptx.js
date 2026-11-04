@@ -1,5 +1,5 @@
 /*
- * vml-apresentacao-pptx.js \u2014 v1.2
+ * vml-apresentacao-pptx.js \u2014 v1.4
  * Preenche um template .pptx marcado com tags e baixa o arquivo, dentro de um artefato HTML do WPP Open.
  * N\u00e3o conhece layout: l\u00ea as tags do pr\u00f3prio template.
  *
@@ -30,7 +30,7 @@
 
   var base = (function () {
     var s = document.currentScript && document.currentScript.src;
-    return s ? s.slice(0, s.lastIndexOf("/") + 1) : "";
+    return s ? s.slice(0, s.lastIndexOf("/") + 1) : "https://cdn.jsdelivr.net/gh/tomcoliveira/vml-apresentacao-engine@v1.4/";
   })();
 
   function slides(zip) {
@@ -188,8 +188,12 @@
 
   // Artefato m\u00ednimo: monta a interface e carrega o JSZip sozinho, para o agente s\u00f3 escrever D.
   function artefato(D) {
+    if (root.__vmlRodou) return;
+    root.__vmlRodou = true;
     function iniciar() {
       var corpo = document.body;
+      var aviso = document.getElementById("vml-carregando");
+      if (aviso) aviso.remove();
       corpo.style.cssText += ";font-family:Arial,sans-serif;margin:16px";
       var avisos = document.createElement("div");
       avisos.style.cssText = "white-space:pre-wrap;font-size:13px;color:#a00;margin-bottom:8px";
@@ -209,10 +213,12 @@
       s.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
       s.onload = iniciar;
       s.onerror = function () { document.body.textContent = "N\u00e3o foi poss\u00edvel carregar o JSZip do jsDelivr."; };
-      document.head.appendChild(s);
+      (document.head || document.body).appendChild(s);
     }
     if (document.body) comZip(); else document.addEventListener("DOMContentLoaded", comZip);
   }
 
-  root.VMLApresentacao = { version: "1.3", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar, artefato: artefato };
-})(this);
+  root.VMLApresentacao = { version: "1.4", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar, artefato: artefato };
+  // O Open pode rodar o script do artefato antes deste carregar; o artefato deixa os dados em VMLD e o engine roda sozinho.
+  if (root.VMLD) artefato(root.VMLD);
+})(typeof window !== "undefined" ? window : this);
