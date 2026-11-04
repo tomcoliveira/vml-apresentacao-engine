@@ -1,5 +1,5 @@
 /*
- * vml-apresentacao-pptx.js \u2014 v1.5
+ * vml-apresentacao-pptx.js \u2014 v1.6
  * Preenche um template .pptx marcado com tags e baixa o arquivo, dentro de um artefato HTML do WPP Open.
  * N\u00e3o conhece layout: l\u00ea as tags do pr\u00f3prio template.
  *
@@ -30,7 +30,7 @@
 
   var base = (function () {
     var s = document.currentScript && document.currentScript.src;
-    return s ? s.slice(0, s.lastIndexOf("/") + 1) : "https://cdn.jsdelivr.net/gh/tomcoliveira/vml-apresentacao-engine@v1.5/";
+    return s ? s.slice(0, s.lastIndexOf("/") + 1) : "https://cdn.jsdelivr.net/gh/tomcoliveira/vml-apresentacao-engine@v1.6/";
   })();
 
   function slides(zip) {
@@ -167,10 +167,25 @@
           baixar: function () {
             preencherDocs(docs, D.valores || {});
             docs.forEach(function (d) { zip.file(d.nome, new XMLSerializer().serializeToString(d.doc)); });
-            return zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation" }).then(function (blob) {
-              var a = document.createElement("a");
-              a.href = URL.createObjectURL(blob); a.download = nomeArquivo(D);
-              document.body.appendChild(a); a.click(); a.remove();
+            var MIME = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+            return Promise.all([zip.generateAsync({ type: "blob", mimeType: MIME }), zip.generateAsync({ type: "base64" })]).then(function (r) {
+              var nome = nomeArquivo(D);
+              try {
+                var a = document.createElement("a");
+                a.href = URL.createObjectURL(r[0]); a.download = nome;
+                document.body.appendChild(a); a.click(); a.remove();
+              } catch (e) {}
+              // Plano B: alguns navegadores ignoram o download autom\u00e1tico dentro do artefato do Open.
+              var caixa = document.getElementById("vml-links");
+              if (!caixa) { caixa = document.createElement("div"); caixa.id = "vml-links"; document.body.insertBefore(caixa, document.body.firstChild); }
+              caixa.style.cssText = "font-size:13px;margin:0 0 12px";
+              caixa.innerHTML = "";
+              caixa.appendChild(document.createTextNode("Se o download n\u00e3o come\u00e7ou: "));
+              var l = document.createElement("a");
+              l.href = "data:" + MIME + ";base64," + r[1]; l.download = nome; l.target = "_blank";
+              l.textContent = "Baixar o arquivo .pptx";
+              caixa.appendChild(l);
+              caixa.appendChild(document.createTextNode(" (ou clique com o bot\u00e3o direito e escolha Salvar link como)."));
             });
           }
         };
@@ -216,7 +231,9 @@
       botao.style.cssText = "font-size:14px;padding:8px 16px;margin-bottom:12px";
       var vb = document.createElement("div");
       vb.style.cssText = "width:100%;max-width:960px";
-      [avisos, entrada, botao, vb].forEach(function (e) { corpo.appendChild(e); });
+      var links = document.createElement("div");
+      links.id = "vml-links";
+      [avisos, entrada, botao, links, vb].forEach(function (e) { corpo.appendChild(e); });
       montar(D, { preview: vb, botao: botao, entrada: entrada, avisos: avisos });
     }
     function comZip() {
@@ -230,7 +247,7 @@
     if (document.body) comZip(); else document.addEventListener("DOMContentLoaded", comZip);
   }
 
-  root.VMLApresentacao = { version: "1.5", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar, artefato: artefato };
+  root.VMLApresentacao = { version: "1.6", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar, artefato: artefato };
   // O Open pode rodar o script do artefato antes deste carregar; o artefato deixa os dados em VMLD e o engine roda sozinho.
   if (root.VMLD) artefato(root.VMLD);
 })(typeof window !== "undefined" ? window : this);
