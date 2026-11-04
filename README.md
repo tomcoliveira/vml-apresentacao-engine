@@ -10,7 +10,7 @@ Preenche um template .pptx marcado com tags e baixa o arquivo, dentro de um arte
 <button id="baixar">Baixar PowerPoint</button>
 <div id="vb"></div>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/tomcoliveira/vml-apresentacao-engine@v1.6/vml-apresentacao-pptx.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/tomcoliveira/vml-apresentacao-engine@v1.7/vml-apresentacao-pptx.js"></script>
 <script>
 const D = { template: "ford-01", nome_arquivo: "exemplo", valores: { titulo: "..." } };
 VMLApresentacao.montar(D, { preview: vb, botao: baixar, entrada: tpl, avisos: avisos });

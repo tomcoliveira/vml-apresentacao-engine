@@ -1,5 +1,5 @@
 /*
- * vml-apresentacao-pptx.js \u2014 v1.6
+ * vml-apresentacao-pptx.js \u2014 v1.7
  * Preenche um template .pptx marcado com tags e baixa o arquivo, dentro de um artefato HTML do WPP Open.
  * N\u00e3o conhece layout: l\u00ea as tags do pr\u00f3prio template.
  *
@@ -30,7 +30,7 @@
 
   var base = (function () {
     var s = document.currentScript && document.currentScript.src;
-    return s ? s.slice(0, s.lastIndexOf("/") + 1) : "https://cdn.jsdelivr.net/gh/tomcoliveira/vml-apresentacao-engine@v1.6/";
+    return s ? s.slice(0, s.lastIndexOf("/") + 1) : "https://cdn.jsdelivr.net/gh/tomcoliveira/vml-apresentacao-engine@v1.7/";
   })();
 
   function slides(zip) {
@@ -178,7 +178,7 @@
               // Plano B: alguns navegadores ignoram o download autom\u00e1tico dentro do artefato do Open.
               var caixa = document.getElementById("vml-links");
               if (!caixa) { caixa = document.createElement("div"); caixa.id = "vml-links"; document.body.insertBefore(caixa, document.body.firstChild); }
-              caixa.style.cssText = "font-size:13px;margin:0 0 12px";
+              caixa.style.cssText = "font-size:13px;margin:8px 0 0";
               caixa.innerHTML = "";
               caixa.appendChild(document.createTextNode("Se o download n\u00e3o come\u00e7ou: "));
               var l = document.createElement("a");
@@ -198,7 +198,7 @@
       var msgs = res.erros.map(function (e) { return "Erro: " + e; }).concat(res.avisos.map(function (a) { return "Aviso: " + a; }));
       if (ui.avisos) ui.avisos.textContent = msgs.join("\n");
       if (ui.preview) res.preview(ui.preview);
-      if (ui.botao) { ui.botao.disabled = res.erros.length > 0; ui.botao.onclick = res.baixar; }
+      if (ui.botao) { ui.botao.disabled = res.erros.length > 0; ui.botao.style.opacity = ui.botao.disabled ? "0.4" : "1"; ui.botao.onclick = res.baixar; }
       return res;
     }
     function pedirArquivo(motivo) {
@@ -228,12 +228,17 @@
       entrada.type = "file"; entrada.accept = ".pptx"; entrada.style.display = "none";
       var botao = document.createElement("button");
       botao.textContent = "Baixar PowerPoint";
-      botao.style.cssText = "font-size:14px;padding:8px 16px;margin-bottom:12px";
+      botao.style.cssText = "font-size:15px;font-weight:700;padding:10px 20px;background:#00095b;color:#fff;border:0;border-radius:4px;cursor:pointer";
       var vb = document.createElement("div");
       vb.style.cssText = "width:100%;max-width:960px";
       var links = document.createElement("div");
       links.id = "vml-links";
-      [avisos, entrada, botao, links, vb].forEach(function (e) { corpo.appendChild(e); });
+      // Barra fixa no topo: o Open abre o artefato numa janela pequena e rolada, e o bot\u00e3o sumia da vista.
+      var barra = document.createElement("div");
+      barra.style.cssText = "position:sticky;top:0;z-index:10;background:#fff;padding:8px 0;border-bottom:1px solid #ddd;margin-bottom:12px";
+      botao.style.margin = "0";
+      [botao, links, avisos].forEach(function (e) { barra.appendChild(e); });
+      [barra, entrada, vb].forEach(function (e) { corpo.appendChild(e); });
       montar(D, { preview: vb, botao: botao, entrada: entrada, avisos: avisos });
     }
     function comZip() {
@@ -247,7 +252,7 @@
     if (document.body) comZip(); else document.addEventListener("DOMContentLoaded", comZip);
   }
 
-  root.VMLApresentacao = { version: "1.6", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar, artefato: artefato };
+  root.VMLApresentacao = { version: "1.7", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar, artefato: artefato };
   // O Open pode rodar o script do artefato antes deste carregar; o artefato deixa os dados em VMLD e o engine roda sozinho.
   if (root.VMLD) artefato(root.VMLD);
 })(typeof window !== "undefined" ? window : this);
