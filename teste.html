@@ -1,0 +1,11 @@
+<!doctype html><meta charset="utf-8"><title>teste</title>
+<div id="avisos" style="white-space:pre;font:13px monospace;color:#a00"></div>
+<input type="file" id="tpl" accept=".pptx" style="display:none">
+<button id="baixar">Baixar PowerPoint</button>
+<div id="vb" style="width:960px"></div>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="vml-apresentacao-pptx.js"></script>
+<script>
+const D = {"nome_arquivo": "vml071-exemplo-onde-rodar-o-gerador", "valores": {"titulo": "Onde rodar o gerador de slides", "subtitulo": "Três caminhos para o agente do Open entregar o .pptx pronto, do mais simples ao mais robusto.", "c1_rotulo": "DENTRO DO OPEN", "c1_nome": "Código no próprio agente", "c1_descricao": "O agente roda o Python com o template anexado e devolve o arquivo na conversa.", "c1_item1": "Nada fora do Open", "c1_item2": "Depende de execução de código", "c1_item3": "Template como conhecimento", "c1_potencial": "Alto", "c1_esforco": "Baixo", "c2_rotulo": "API NA WPP", "c2_nome": "Serviço no Azure da WPP", "c2_descricao": "O agente chama a API, que preenche o template e devolve um link do arquivo.", "c2_item1": "Vale para qualquer template", "c2_item2": "Precisa de aprovação de TI", "c2_item3": "Dado fica no tenant WPP", "c2_potencial": "Alto", "c2_esforco": "Médio", "c3_rotulo": "SÓ TEXTO", "c3_nome": "Agente devolve os campos", "c3_descricao": "O agente escreve o texto de cada campo no limite e alguém cola no slide.", "c3_item1": "Funciona hoje", "c3_item2": "Último passo manual", "c3_item3": "Sem risco de dado", "c3_potencial": "Baixo", "c3_esforco": "Baixo"}, "template": "ford-01"};
+window.res = VMLApresentacao.montar(D, {preview: vb, botao: baixar, entrada: tpl, avisos: avisos});
+</script>
