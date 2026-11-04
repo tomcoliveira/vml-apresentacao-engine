@@ -1,5 +1,5 @@
 /*
- * vml-apresentacao-pptx.js \u2014 v1.4
+ * vml-apresentacao-pptx.js \u2014 v1.5
  * Preenche um template .pptx marcado com tags e baixa o arquivo, dentro de um artefato HTML do WPP Open.
  * N\u00e3o conhece layout: l\u00ea as tags do pr\u00f3prio template.
  *
@@ -20,9 +20,9 @@
  */
 (function (root) {
   var TEMPLATES = {
-    "ford-01": { arquivo: "templates/ford-01.b64.txt", nome: "Ford, compara\u00e7\u00e3o de tr\u00eas op\u00e7\u00f5es" }
+    "ford-01": { arquivo: "templates/ford-01.js", nome: "Ford, compara\u00e7\u00e3o de tr\u00eas op\u00e7\u00f5es" }
   };
-  // O jsDelivr bloqueia .pptx; o template publicado vai em base64 (.b64.txt), gerado a partir do .pptx de mesmo nome.
+  // O jsDelivr bloqueia .pptx; o template publicado vai em base64 dentro de templates/<id>.js, gerado a partir do .pptx de mesmo nome.
   var A = "http://schemas.openxmlformats.org/drawingml/2006/main";
   var P = "http://schemas.openxmlformats.org/presentationml/2006/main";
   var TAG = /\{\{(\w+)\|([^}]+)\}\}/g;
@@ -30,7 +30,7 @@
 
   var base = (function () {
     var s = document.currentScript && document.currentScript.src;
-    return s ? s.slice(0, s.lastIndexOf("/") + 1) : "https://cdn.jsdelivr.net/gh/tomcoliveira/vml-apresentacao-engine@v1.4/";
+    return s ? s.slice(0, s.lastIndexOf("/") + 1) : "https://cdn.jsdelivr.net/gh/tomcoliveira/vml-apresentacao-engine@v1.5/";
   })();
 
   function slides(zip) {
@@ -45,16 +45,28 @@
     return s;
   }
 
+  // Template registrado vem por <script> (templates/<id>.js define o base64); o Open pode bloquear fetch, mas carrega scripts.
+  function porScript(id) {
+    root.VMLTemplates = root.VMLTemplates || {};
+    if (root.VMLTemplates[id]) return Promise.resolve(root.VMLTemplates[id]);
+    return new Promise(function (ok, falha) {
+      var s = document.createElement("script");
+      s.src = base + "templates/" + id + ".js";
+      s.onload = function () { root.VMLTemplates[id] ? ok(root.VMLTemplates[id]) : falha(new Error("template vazio: " + id)); };
+      s.onerror = function () { falha(new Error("template n\u00e3o carregou: " + id)); };
+      (document.head || document.body).appendChild(s);
+    });
+  }
+
   function carregar(fonte) {
     if (fonte instanceof Blob) return fonte.arrayBuffer().then(JSZip.loadAsync);
-    var url = TEMPLATES[fonte] ? base + TEMPLATES[fonte].arquivo : fonte;
-    var b64 = /\.b64\.txt$/.test(url);
-    return fetch(url).then(function (r) {
+    if (TEMPLATES[fonte]) {
+      return porScript(fonte).then(function (b64) { return JSZip.loadAsync(b64, { base64: true }); });
+    }
+    return fetch(fonte).then(function (r) {
       if (!r.ok) throw new Error("template n\u00e3o encontrado: " + fonte);
-      return b64 ? r.text() : r.arrayBuffer();
-    }).then(function (dados) {
-      return b64 ? JSZip.loadAsync(dados.replace(/\s+/g, ""), { base64: true }) : JSZip.loadAsync(dados);
-    });
+      return r.arrayBuffer();
+    }).then(JSZip.loadAsync);
   }
 
   function lerDocs(zip) {
@@ -218,7 +230,7 @@
     if (document.body) comZip(); else document.addEventListener("DOMContentLoaded", comZip);
   }
 
-  root.VMLApresentacao = { version: "1.4", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar, artefato: artefato };
+  root.VMLApresentacao = { version: "1.5", templates: TEMPLATES, gerar: gerar, montar: montar, validar: validar, artefato: artefato };
   // O Open pode rodar o script do artefato antes deste carregar; o artefato deixa os dados em VMLD e o engine roda sozinho.
   if (root.VMLD) artefato(root.VMLD);
 })(typeof window !== "undefined" ? window : this);

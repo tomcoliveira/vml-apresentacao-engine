@@ -10,7 +10,7 @@ Preenche um template .pptx marcado com tags e baixa o arquivo, dentro de um arte
 <button id="baixar">Baixar PowerPoint</button>
 <div id="vb"></div>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/tomcoliveira/vml-apresentacao-engine@v1.4/vml-apresentacao-pptx.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/tomcoliveira/vml-apresentacao-engine@v1.5/vml-apresentacao-pptx.js"></script>
 <script>
 const D = { template: "ford-01", nome_arquivo: "exemplo", valores: { titulo: "..." } };
 VMLApresentacao.montar(D, { preview: vb, botao: baixar, entrada: tpl, avisos: avisos });
@@ -27,7 +27,7 @@ O parágrafo herda a formatação do primeiro trecho. Texto sem tag não muda. C
 
 ## Templates
 
-Ficam em `templates/` e são registrados em `TEMPLATES`. O jsDelivr bloqueia .pptx (responde 403), então cada template é publicado também em base64, em `<id>.b64.txt`, que é o arquivo que o engine carrega. Depois de editar o .pptx: `base64 -i templates/<id>.pptx -b 76 > templates/<id>.b64.txt`. Sem template acessível, o artefato pede o .pptx ao usuário. É o caminho para template que não pode ser público.
+Ficam em `templates/` e são registrados em `TEMPLATES`. O jsDelivr bloqueia .pptx (responde 403), então cada template é publicado também em base64 dentro de `<id>.js`, carregado por `<script>` porque o Open pode bloquear `fetch`. Depois de editar o .pptx: `printf '(window.VMLTemplates = window.VMLTemplates || {})["<id>"] = "%s";\n' "$(base64 -i templates/<id>.pptx)" > templates/<id>.js`. Sem template acessível, o artefato pede o .pptx ao usuário. É o caminho para template que não pode ser público.
 
 - `ford-01`: Ford, comparação de três opções (26 campos).
 
